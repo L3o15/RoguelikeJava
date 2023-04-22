@@ -4,8 +4,8 @@ import processing.core.PGraphics;
 import processing.core.PImage;
 
 public class Sprite {
-    private final PImage image;
-    private final boolean collides;
+    private PImage image;
+    private boolean collides;
 
     public Sprite(PImage image, boolean collides) {
         this.image = image;
@@ -19,5 +19,21 @@ public class Sprite {
 
     public boolean collides() {
         return collides;
+    }
+
+    public PImage getImage() {
+        return image;
+    }
+
+    public void setImage(PImage image) {
+        this.image = image;
+    }
+
+    public boolean isCollides() {
+        return collides;
+    }
+
+    public void setCollides(boolean collides) {
+        this.collides = collides;
     }
 }
