@@ -39,8 +39,9 @@ public class Sfondo {
     }
 
     public boolean checkCollisioinFollowing(PVector pos){
-        int position = (int) (pos.x + pos.y * spritesPerLine);
-        return texture.get(position).collides();
+        int position = (int) (pos.x + (pos.y * spritesPerLine));
+        if (texture.get(position) != null) return texture.get(position).collides();
+        return true;
     }
 
     public ArrayList<Sprite> getTexture() {

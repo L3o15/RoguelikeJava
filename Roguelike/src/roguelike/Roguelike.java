@@ -8,13 +8,14 @@ import java.util.List;
 
 public class Roguelike extends PApplet {
     private Player player;
-    //private Camera camera;
+    private List<MapItem> mapItems;
+    private Camera camera;
     private Minimap minimap;
     private List<Sfondo> livelli;
     private Door nextLevelDoor;
     private Key nextLevelKey;
     public static int livello = 0;
-    public static int levelMax = 5;
+    public static int levelMax = 12;
     public long movementDetector = System.currentTimeMillis();
     public long hitDetector = System.currentTimeMillis();
     private List<Enemy> enemies;
@@ -26,16 +27,21 @@ public class Roguelike extends PApplet {
     public void settings() {
         width = Sfondo.spritesPerLine * Sfondo.spriteDimension;
         height = (Sfondo.spritesPerColumn + 1) * Sfondo.spriteDimension;
-        //width = 50 * 16;
-        //height = 40 * 16;
+
     }
 
     @Override
     public void setup() {
+        var items = new ItemsContainer(getGraphics());
+        for (int i = 0; i < 1; i++) {
+            items.addItem(new Food(loadImage("Items/apple.png"),true, 10));
+            items.addItem(new Poison(loadImage("Items/poison.png"), false, 20));
+        }
+        player = new Player(getGraphics(), loadImage("Tiles/tile_0098.png"), new PVector(10,10), items);
         livelli = new ArrayList<>();
         for (int i = 0; i < levelMax + 1; i++) {
             var sprites = new ArrayList<Sprite>();
-            int index = Sfondo.spritesPerLine*Sfondo.spritesPerColumn - 1;
+            int index = (int) (player.getPos().x + player.getPos().y * Sfondo.spritesPerLine);
             for (int j = 0; j < Sfondo.spritesPerColumn*Sfondo.spritesPerLine; j++) {
                 sprites.add(new Sprite(loadImage("Tiles/tile_0040.png"), true));
             }
@@ -97,52 +103,57 @@ public class Roguelike extends PApplet {
             livelli.get(i).setSfondo(sprites);
         }
 
-        //camera = new Camera(new PVector(Sfondo.spritesPerLine - 17,Sfondo.spritesPerColumn - 11),new PVector(Sfondo.spritesPerLine - 1,Sfondo.spritesPerColumn - 1), livelli.get(0).getTexture(), getGraphics());
-        minimap = new Minimap(livelli.get(livello), getGraphics());
-
-        var items = new ItemsContainer(getGraphics());
-        for (int i = 0; i < 5; i++) {
-            items.addItem(new Food(loadImage("Items/apple.png"),true, 10));
-            items.addItem(new Poison(loadImage("Items/poison.png"), false, 20));
-        }
-        player = new Player(getGraphics(), loadImage("Tiles/tile_0098.png"), new PVector(Sfondo.spritesPerLine - 1,Sfondo.spritesPerColumn - 1), items);
+        camera = new Camera(new PVector(player.getPos().x - 4, player.getPos().y - 4),new PVector(player.getPos().x + 6, player.getPos().y + 4), livelli.get(0).getTexture(), getGraphics());
+        minimap = new Minimap(livelli.get(livello), getGraphics(), loadImage("Items/compass.png"));
 
         generateNewDoorPos();
         generateNewKeyPos();
         enemies = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 25; i++) {
             enemies.add(new Enemy(getGraphics(), loadImage("Tiles/tile_0121.png"), new PVector((int) (Math.random() * Sfondo.spritesPerLine), (int) (Math.random() * Sfondo.spritesPerColumn))));
         }
+        generateNewMapItems();
     }
 
     @Override
     public void draw() {
-        livelli.get(livello).resize(Sfondo.spriteDimension);
-        livelli.get(livello).draw();
+        livelli.get(livello).resize(80);
+        camera.draw(width);
 
-        //livelli.get(livello).resize(50);
-        //camera.draw(width);
         if (nextLevelKey != null){
-            nextLevelKey.draw();
+            nextLevelKey.draw(camera.getDrawingPosition((int) nextLevelKey.getPos().x, (int) nextLevelKey.getPos().y));
             if (player.getPos().equals(nextLevelKey.getPos())) {
                 player.addkey(nextLevelKey);
                 nextLevelKey = null;
             }
         }
-        nextLevelDoor.draw();
+        nextLevelDoor.draw(camera.getDrawingPosition((int) nextLevelDoor.getPos().x, (int) nextLevelDoor.getPos().y));
 
         if (player.getPos().equals(nextLevelDoor.getPos()) && player.getKey() != null && livello + 1 <= levelMax){
             livello++;
             player.addkey(null);
             generateNewKeyPos();
             generateNewDoorPos();
-            player.setPos(new PVector(Sfondo.spritesPerLine - 1,Sfondo.spritesPerColumn - 1));
+            player.setPos(new PVector(10,10));
             minimap.setSfondo(livelli.get(livello));
+            camera.setTexture(livelli.get(livello).getTexture());
+            camera.setPrimoPunto(new PVector(player.getPos().x - 4, player.getPos().y - 4));
+            camera.setSecondoPunto(new PVector(player.getPos().x + 6, player.getPos().y + 4));
+            generateNewMapItems();
+        }
+
+        for (int i = 0; i < mapItems.size(); i++) {
+            var it = mapItems.get(i);
+            it.draw(camera.getDrawingPosition((int) it.getPos().x, (int) it.getPos().y));
+            if (it.getPos().equals(player.getPos())){
+                player.getItems().addItem(it.getItem());
+                mapItems.remove(it);
+            }
         }
 
         for (int i = 0; i < enemies.size(); i++){
             var e = enemies.get(i);
-            e.draw();
+            e.draw(camera.getDrawingPosition((int) e.getPos().x, (int) e.getPos().y));
             if (System.currentTimeMillis() - hitDetector > 1000 && e.getPos().equals(player.getPos())){
                 hitDetector = System.currentTimeMillis();
                 System.out.println("Hit");
@@ -187,26 +198,43 @@ public class Roguelike extends PApplet {
             minimap.draw(width, player.getPos(), nextLevelDoor.getPos(), nextLevelKey.getPos());
         }
 
-        player.draw();
-
+        player.draw(camera.getDrawingPosition((int) player.getPos().x, (int) player.getPos().y));
     }
 
     private void generateNewKeyPos() {
-        var keyPos = new PVector((int) (Math.random() * Sfondo.spritesPerLine), (int) (Math.random() * Sfondo.spritesPerColumn));
+        var keyPos = new PVector((int) (Math.random() * (Sfondo.spritesPerLine - 2)), (int) (Math.random() * (Sfondo.spritesPerColumn - 2)));
         while (livelli.get(livello).checkCollisioinFollowing(keyPos)){
-            keyPos.x = (int) (Math.random() * Sfondo.spritesPerLine);
-            keyPos.y = (int) (Math.random() * Sfondo.spritesPerColumn);
+            keyPos.x = (int) (Math.random() * (Sfondo.spritesPerLine - 2));
+            keyPos.y = (int) (Math.random() * (Sfondo.spritesPerColumn - 2));
         }
         nextLevelKey = new Key(loadImage("Items/key.png"), keyPos, getGraphics());
     }
 
     private void generateNewDoorPos() {
-        var doorPos = new PVector((int) (Math.random() * Sfondo.spritesPerLine), (int) (Math.random() * Sfondo.spritesPerColumn));
+        var doorPos = new PVector((int) (Math.random() * (Sfondo.spritesPerLine - 2)), (int) (Math.random() * (Sfondo.spritesPerColumn - 2)));
         while (livelli.get(livello).checkCollisioinFollowing(doorPos)){
-            doorPos.x = (int) (Math.random() * Sfondo.spritesPerLine);
-            doorPos.y = (int) (Math.random() * Sfondo.spritesPerColumn);
+            doorPos.x = (int) (Math.random() * (Sfondo.spritesPerLine - 2));
+            doorPos.y = (int) (Math.random() * (Sfondo.spritesPerColumn - 2));
         }
         nextLevelDoor = new Door(getGraphics(), loadImage("Tiles/tile_0045.png"), doorPos);
+    }
+
+    private void generateNewMapItems() {
+        mapItems = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            var itemPos = new PVector((int) (Math.random() * (Sfondo.spritesPerLine - 2)), (int) (Math.random() * (Sfondo.spritesPerColumn - 2)));
+            while (livelli.get(livello).checkCollisioinFollowing(itemPos)){
+                itemPos.x = (int) (Math.random() * (Sfondo.spritesPerLine - 2));
+                itemPos.y = (int) (Math.random() * (Sfondo.spritesPerColumn - 2));
+            }
+            if (i%2 == 0){
+                mapItems.add(new MapItem(new Poison(loadImage("Items/poison.png"), false, 20), itemPos, getGraphics()));
+            }else{
+                mapItems.add(new MapItem(new Food(loadImage("Items/apple.png"), true, 10), itemPos, getGraphics()));
+            }
+
+
+        }
     }
 
     @Override
@@ -236,8 +264,10 @@ public class Roguelike extends PApplet {
                 break;
         }
         PVector newPos = new PVector(pos.x + movement.x, pos.y + movement.y);
-        if (newPos.x < 0 || newPos.x > Sfondo.spritesPerLine - 1 || newPos.y < 0 || newPos.y > Sfondo.spritesPerColumn - 1) return;
+        if (newPos.x < 0 || newPos.x >= Sfondo.spritesPerLine - 1 || newPos.y < 0 || newPos.y >= Sfondo.spritesPerColumn - 1) return;
         if (livelli.get(livello).checkCollisioinFollowing(newPos)) return;
         player.move((int) movement.x, (int) movement.y);
+        camera.move((int) movement.x, (int) movement.y);
+        camera.reset(player.getPos());
     }
 }

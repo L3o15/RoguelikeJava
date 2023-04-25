@@ -11,7 +11,7 @@ public class Camera {
     private PVector secondoPunto;
     private List<Sprite> texture;
     private final PGraphics gfx;
-    public static final int spriteDimension = 50;
+    public static final int spriteDimension = 80;
     public static int cameraDimensionLine = Sfondo.spritesPerLine * Sfondo.spriteDimension / spriteDimension;
     public static int cameraDimensionColumn = Sfondo.spritesPerColumn * Sfondo.spriteDimension / spriteDimension;
 
@@ -47,6 +47,31 @@ public class Camera {
         secondoPunto.x += x;
         primoPunto.y += y;
         secondoPunto.y += y;
+        if (primoPunto.x < 0){
+            primoPunto.x = 0;
+            secondoPunto.x -= x;
+        }
+        if (primoPunto.y < 0){
+            primoPunto.y = 0 ;
+            secondoPunto.y -= y;
+        }
+        if (primoPunto.x >= Sfondo.spritesPerLine - 10){
+            primoPunto.x = Sfondo.spritesPerLine - 11 ;
+            secondoPunto.x -= x;
+        }
+        if (primoPunto.y >= Sfondo.spritesPerColumn - 8){
+            primoPunto.y = Sfondo.spritesPerColumn - 9 ;
+            secondoPunto.y -= y;
+        }
+    }
+
+    public boolean isInside(int x, int y){
+        return x > primoPunto.x && x <= secondoPunto.x && y >= primoPunto.y && y <= secondoPunto.y;
+    }
+
+    public PVector getDrawingPosition(int x, int y){
+        //if (!isInside(x,y)) return null;
+        return new PVector(x - primoPunto.x, y - primoPunto.y);
     }
 
     public void draw(float width){
@@ -55,20 +80,39 @@ public class Camera {
         var yCam = 0;
         var xCam = 0;
         for (var s : texture){
-
+            s.getImage().resize(spriteDimension, spriteDimension);
             x += 1;
             if (x >= Sfondo.spritesPerLine){
                 y++;
                 x = 0;
             }
-            if (x > primoPunto.x && x < secondoPunto.x && y > primoPunto.y && y < secondoPunto.y){
+            if (x > primoPunto.x && x <= secondoPunto.x && y >= primoPunto.y && y <= secondoPunto.y){
                 s.draw(gfx, xCam, yCam);
+                //gfx.square(xCam, yCam, spriteDimension);
                 xCam += spriteDimension;
                 if (xCam >= width){
                     xCam = 0;
                     yCam += spriteDimension;
                 }
             }
+        }
+    }
+
+    public List<Sprite> getTexture() {
+        return texture;
+    }
+
+    public void setTexture(List<Sprite> texture) {
+        for (var t : texture){
+            t.getImage().resize(spriteDimension, spriteDimension);
+        }
+        this.texture = texture;
+    }
+
+    public void reset(PVector posPlayer){
+        if (posPlayer.x - 4 >= 0 && posPlayer.y - 4 >= 0 && posPlayer.x + 6 < Sfondo.spritesPerLine - 1 && posPlayer.y + 4 < Sfondo.spritesPerColumn - 1){
+            primoPunto = new PVector(posPlayer.x - 4, posPlayer.y - 4);
+            secondoPunto = new PVector(posPlayer.x + 6, posPlayer.y + 4);
         }
     }
 }

@@ -1,6 +1,7 @@
 package roguelike;
 
 import processing.core.PGraphics;
+import processing.core.PImage;
 import processing.core.PVector;
 
 public class Minimap {
@@ -8,10 +9,13 @@ public class Minimap {
     public static final int spritesPerLine = 50;
     public static final int spritesPerColumn = 40;
     public static final int spriteDimension = 2;
+    private final PImage compassImage;
     private final PGraphics gfx;
 
-    public Minimap(Sfondo sfondo, PGraphics gfx) {
+    public Minimap(Sfondo sfondo, PGraphics gfx, PImage compassImage) {
+        compassImage.resize(50, 50);
         this.sfondo = new Sfondo(gfx);
+        this.compassImage = compassImage;
         this.sfondo.setSfondo(sfondo.getTexture());
         sfondo.resize(spriteDimension);
         this.gfx = gfx;
@@ -21,7 +25,7 @@ public class Minimap {
 
         var x = (int)widthScreen - spriteDimension * (1 + spritesPerLine);
         var y = 0;
-
+        gfx.image(compassImage, x - 55, y + 15);
         var xPos = 0;
         var yPos = 0;
 

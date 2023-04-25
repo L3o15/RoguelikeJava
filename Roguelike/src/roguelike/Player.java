@@ -10,7 +10,7 @@ public class Player {
     private final PImage image;
     private PVector pos;
     public boolean dead = false;
-    private float energy = 10;
+    private float energy = 100;
     private final PVector initialPos;
     private final ItemsContainer items;
     private Key key;
@@ -21,14 +21,15 @@ public class Player {
         this.image = image;
         this.pos = pos;
         this.items = items;
-        image.resize(Sfondo.spriteDimension, Sfondo.spriteDimension);
+        image.resize(Camera.spriteDimension, Camera.spriteDimension);
         initialPos = new PVector(pos.x, pos.y);
     }
 
-    public void draw() {
+    public void draw(PVector drawingPos) {
         gfx.textSize(20);
         gfx.color(0,0,0);
-        gfx.image(image, pos.x * Sfondo.spriteDimension, pos.y * Sfondo.spriteDimension);
+        //gfx.image(image, 50 * Sfondo.spriteDimension - Camera.spriteDimension * 5, 40 * Sfondo.spriteDimension - Camera.spriteDimension * 4);
+        gfx.image(image, drawingPos.x * Camera.spriteDimension, drawingPos.y * Camera.spriteDimension);
         items.draw();
         gfx.fill(255,255,255,255);
         var energyString = String.format("%.1f", energy);
@@ -43,6 +44,7 @@ public class Player {
         gfx.fill(0,0,0,0);
         gfx.square(49 * Sfondo.spriteDimension, 40 * Sfondo.spriteDimension, Sfondo.spriteDimension);
         if (key != null){
+            key.getSprite().resize(Sfondo.spriteDimension, Sfondo.spriteDimension);
             gfx.image(key.getSprite(), 49 * Sfondo.spriteDimension, 40 * Sfondo.spriteDimension);
         }
     }

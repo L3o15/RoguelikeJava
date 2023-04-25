@@ -10,7 +10,7 @@ public class Door {
     private final PVector pos;
 
     public Door(PGraphics gfx, PImage image, PVector pos) {
-        image.resize(Sfondo.spriteDimension, Sfondo.spriteDimension);
+        image.resize(Camera.spriteDimension, Camera.spriteDimension);
         this.gfx = gfx;
         this.image = image;
         this.pos = pos;
@@ -26,7 +26,7 @@ public class Door {
     }
 
 
-    public void draw(){
-        gfx.image(image, pos.x*Sfondo.spriteDimension,pos.y*Sfondo.spriteDimension);
+    public void draw(PVector drawingPosition){
+        gfx.image(image, drawingPosition.x * Camera.spriteDimension,drawingPosition.y * Camera.spriteDimension);
     }
 }

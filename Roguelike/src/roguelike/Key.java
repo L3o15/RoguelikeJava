@@ -11,7 +11,7 @@ public class Key {
 
 
     public Key(PImage sprite, PVector pos, PGraphics gfx) {
-        sprite.resize(Sfondo.spriteDimension, Sfondo.spriteDimension);
+        sprite.resize(Camera.spriteDimension, Camera.spriteDimension);
         this.sprite = sprite;
         this.pos = pos;
         this.gfx = gfx;
@@ -29,7 +29,7 @@ public class Key {
         return gfx;
     }
 
-    public void draw(){
-        gfx.image(sprite, pos.x*Sfondo.spriteDimension,pos.y*Sfondo.spriteDimension);
+    public void draw(PVector drawingPosition){
+        gfx.image(sprite, drawingPosition.x * Camera.spriteDimension,drawingPosition.y * Camera.spriteDimension);
     }
 }

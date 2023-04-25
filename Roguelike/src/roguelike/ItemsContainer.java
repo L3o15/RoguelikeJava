@@ -20,6 +20,7 @@ public class ItemsContainer {
     }
 
     public void addItem(Item item){
+        item.getSprite().resize(Sfondo.spriteDimension, Sfondo.spriteDimension);
         items.add(item);
     }
 
